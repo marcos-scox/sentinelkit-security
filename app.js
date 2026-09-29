@@ -95,18 +95,23 @@ function actions(run) {
   return box;
 }
 
+async function readApiResponse(response) {
+  const type = response.headers.get('content-type') || '';
+  if (!type.includes('application/json')) {
+    throw new Error('A API de análise não está conectada. O GitHub Pages hospeda apenas a interface; publique o backend Node e configure window.SENTINELKIT_API.');
+  }
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || `Erro ${response.status}`);
+  return data;
+}
 async function postJson(url, body) {
   const r = await fetch(`${API_BASE}${url}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-  const d = await r.json();
-  if (!r.ok) throw new Error(d.error || `Erro ${r.status}`);
-  return d;
+  return readApiResponse(r);
 }
 async function post(url, file) {
   const fd = new FormData(); fd.append('file', file);
   const r = await fetch(`${API_BASE}${url}`, { method: 'POST', body: fd });
-  const d = await r.json();
-  if (!r.ok) throw new Error(d.error || `Erro ${r.status}`);
-  return d;
+  return readApiResponse(r);
 }
 
 function renderReport(rep) {
