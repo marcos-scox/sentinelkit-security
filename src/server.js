@@ -6,7 +6,7 @@ import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 
 import { scanDependencies } from './modules/deps.js';
-import { scanWeb } from './modules/web.js';
+import { scanWeb } from './modules/web/index.js';
 import { scanText, scanRepo } from './modules/secrets.js';
 import { scanApk } from './modules/apk.js';
 import { report } from './lib/finding.js';

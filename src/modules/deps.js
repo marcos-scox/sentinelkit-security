@@ -119,24 +119,12 @@ function fixedVersions(vuln, pkgName) {
   return [...fixed];
 }
 
-export async function scanDependencies(filename, content) {
-  const { pkgs, notes, exact, unpinned = [] } = parseManifest(filename, content);
+// Consulta OSV para uma lista de pacotes e devolve achados. Reusado pelo módulo web.
+export async function vulnFindings(pkgs, module = MODULE) {
   const findings = [];
-
-  if (unpinned.length) {
-    findings.push(finding({
-      module: MODULE, severity: 'low',
-      title: `${unpinned.length} dependência(s) Python sem versão fixa`,
-      description: 'Pacotes sem "==" podem instalar versões diferentes a cada build, inclusive vulneráveis.',
-      evidence: unpinned.slice(0, 20).join(', '),
-      recommendation: 'Fixe versões (pip freeze > requirements.txt) ou use pip-tools/poetry com lockfile.',
-    }));
-  }
-
-  if (!pkgs.length) return report(MODULE, filename, findings, { packages: 0, notes });
-
+  if (!pkgs.length) return { findings, vulnerablePackages: 0 };
   const BATCH = 500;
-  const hits = []; // { pkg, ids }
+  const hits = [];
   for (let i = 0; i < pkgs.length; i += BATCH) {
     const slice = pkgs.slice(i, i + BATCH);
     const data = await osvFetch('/querybatch', {
@@ -150,47 +138,54 @@ export async function scanDependencies(filename, content) {
   const uniqueIds = [...new Set(hits.flatMap((h) => h.ids))].slice(0, 400);
   const details = await mapLimit(uniqueIds, 8, (id) => osvFetch(`/vulns/${encodeURIComponent(id)}`));
   const byId = new Map(uniqueIds.map((id, k) => [id, details[k]]));
+  const seen = new Set();
 
   for (const { pkg, ids } of hits) {
     for (const id of ids) {
       const v = byId.get(id);
-      // OSV costuma ter o mesmo problema como GHSA e PYSEC/CVE; mantém um só por pacote.
+      const key = `${pkg.name}|${[id, ...(v?.aliases || [])].sort()[0]}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       const { severity, cvss } = v ? severityOf(v) : { severity: 'medium', cvss: null };
       const fixed = v ? fixedVersions(v, pkg.name) : [];
       const cve = v?.aliases?.find((a) => a.startsWith('CVE-'));
-      const f = finding({
-        module: MODULE, severity,
+      findings.push(finding({
+        module, severity, category: 'Componentes vulneráveis',
         title: `${pkg.name}@${pkg.version}: ${v?.summary || id}`,
         description: [
           `${id}${cve ? ` / ${cve}` : ''}${cvss != null ? ` — CVSS ${cvss}` : ''}.`,
           pkg.dev ? 'Dependência de desenvolvimento (risco menor em produção).' : '',
+          pkg.source ? `Detectado em: ${pkg.source}.` : '',
         ].filter(Boolean).join(' '),
         evidence: `${pkg.ecosystem} ${pkg.name}@${pkg.version}`,
         recommendation: fixed.length
           ? `Atualize para ${fixed.join(' ou ')} (ou superior).`
           : 'Sem versão corrigida publicada. Avalie substituir o pacote ou mitigar o uso.',
         reference: `https://osv.dev/vulnerability/${id}`,
-      });
-      f._key = `${pkg.name}|${[id, ...(v?.aliases || [])].sort()[0]}`;
-      findings.push(f);
+      }));
     }
   }
+  return { findings, vulnerablePackages: hits.length };
+}
 
-  // Remove duplicatas por alias.
-  const seen = new Set();
-  const unique = findings.filter((f) => {
-    const k = f._key;
-    delete f._key;
-    if (!k) return true;
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
+export async function scanDependencies(filename, content) {
+  const { pkgs, notes, exact, unpinned = [] } = parseManifest(filename, content);
+  const findings = [];
 
-  return report(MODULE, filename, unique, {
-    packages: pkgs.length,
-    vulnerablePackages: hits.length,
-    exactVersions: exact,
-    notes,
+  if (unpinned.length) {
+    findings.push(finding({
+      module: MODULE, severity: 'low', category: 'Higiene',
+      title: `${unpinned.length} dependência(s) Python sem versão fixa`,
+      description: 'Pacotes sem "==" podem instalar versões diferentes a cada build, inclusive vulneráveis.',
+      evidence: unpinned.slice(0, 20).join(', '),
+      recommendation: 'Fixe versões (pip freeze > requirements.txt) ou use pip-tools/poetry com lockfile.',
+    }));
+  }
+
+  const { findings: vf, vulnerablePackages } = await vulnFindings(pkgs);
+  findings.push(...vf);
+
+  return report(MODULE, filename, findings, {
+    packages: pkgs.length, vulnerablePackages, exactVersions: exact, notes,
   });
 }
