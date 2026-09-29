@@ -5,7 +5,7 @@ Suite open source de **análise de segurança** com 4 módulos e um dashboard ú
 > Backend em **Fastify** (Node.js), frontend estático em HTML/JS puro, sem etapa de build.
 
 **Site online:** [GitHub Pages](https://marcos-scox.github.io/sentinelkit-security/)
-**Backend API:** https://sentinelkit-security.onrender.com
+
 **GitHub:** https://github.com/marcos-scox/sentinelkit-security
 
 
