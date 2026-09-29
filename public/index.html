@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SentinelKit — análise de segurança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --line:#2a3140;
+  --ink:#e6edf3; --dim:#8b98a9; --acc:#3fb6a8; --acc-ink:#0d1117;
+  --crit:#ff5c6c; --high:#ff9e4a; --med:#ffd447; --low:#6cb2ff; --info:#8b98a9;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Space Grotesk',system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:920px;margin:0 auto;padding:28px 18px 80px}
+header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.logo{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.logo b{color:var(--acc)}
+.tag{color:var(--dim);font-size:14px;font-family:'IBM Plex Mono',monospace}
+.warn{background:linear-gradient(90deg,rgba(255,158,74,.12),transparent);border:1px solid rgba(255,158,74,.35);
+  border-left:3px solid var(--high);border-radius:8px;padding:12px 14px;margin:18px 0;font-size:13.5px;color:#f0d9bf}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:22px 0 18px}
+nav button{background:var(--panel);color:var(--dim);border:1px solid var(--line);border-radius:999px;
+  padding:8px 16px;font:inherit;font-size:14px;cursor:pointer;transition:.15s}
+nav button:hover{color:var(--ink);border-color:var(--acc)}
+nav button[aria-selected=true]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:500}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+label{display:block;font-size:13px;color:var(--dim);margin:0 0 6px}
+input[type=text],textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;
+  color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:13px;padding:11px 12px}
+textarea{min-height:150px;resize:vertical}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:14px}
+.grow{flex:1;min-width:220px}
+.file{border:1.5px dashed var(--line);border-radius:8px;padding:18px;text-align:center;color:var(--dim);cursor:pointer;transition:.15s}
+.file:hover{border-color:var(--acc);color:var(--ink)}
+button.run{background:var(--acc);color:var(--acc-ink);border:none;border-radius:8px;padding:11px 22px;
+  font:inherit;font-weight:500;cursor:pointer;white-space:nowrap}
+button.run:disabled{opacity:.5;cursor:wait}
+.hint{color:var(--dim);font-size:12px;margin-top:8px;font-family:'IBM Plex Mono',monospace}
+.result{margin-top:22px}
+.scorebar{display:flex;align-items:center;gap:18px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.score{font-size:44px;font-weight:700;line-height:1;font-family:'IBM Plex Mono',monospace}
+.grade{font-size:14px;color:var(--dim)}
+.counts{display:flex;gap:14px;flex-wrap:wrap;margin-left:auto}
+.pill{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid}
+.f{border:1px solid var(--line);border-left-width:3px;border-radius:8px;padding:14px 16px;margin-bottom:10px;background:var(--panel)}
+.f h4{margin:0 0 6px;font-size:15px;font-weight:500}
+.f .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.f p{margin:6px 0;font-size:13.5px;color:#c9d3de}
+.f .rec{color:var(--acc)}
+.f .ev{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--bg);padding:6px 9px;border-radius:6px;
+  color:var(--dim);word-break:break-all;display:inline-block;margin-top:4px}
+.f a{color:var(--low);font-size:12px}
+.empty{text-align:center;color:var(--acc);padding:26px;font-size:15px}
+.err{color:var(--crit);background:rgba(255,92,108,.1);border:1px solid rgba(255,92,108,.3);border-radius:8px;padding:12px 14px;margin-top:14px;font-size:14px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--acc-ink);border-top-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:7px}
+@keyframes s{to{transform:rotate(360deg)}}
+footer{color:var(--dim);font-size:12px;text-align:center;margin-top:40px;font-family:'IBM Plex Mono',monospace}
+footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="logo">Sentinel<b>Kit</b></span>
+    <span class="tag">// suite de análise de segurança · open source</span>
+  </header>
+
+  <div class="warn">
+    <b>Uso responsável.</b> Rode verificações apenas em sistemas, sites e arquivos que você
+    possui ou tem autorização por escrito para testar. Uso não autorizado pode configurar crime
+    (Lei 12.737/2012). Esta ferramenta faz apenas análise passiva — não explora falhas.
+  </div>
+
+  <nav id="tabs">
+    <button data-t="deps" aria-selected="true">Dependências</button>
+    <button data-t="web">Web / Headers</button>
+    <button data-t="secrets">Segredos</button>
+    <button data-t="apk">APK</button>
+  </nav>
+
+  <div class="card" id="panel"></div>
+  <div class="result" id="result"></div>
+
+  <footer>SentinelKit · análise passiva, sem exploração · <a href="https://github.com/marcos-scox/sentinelkit-security" target="_blank" rel="noopener">GitHub</a></footer>
+</div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

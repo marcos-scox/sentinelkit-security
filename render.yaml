@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: sentinelkit
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ALLOW_PRIVATE_TARGETS
+        value: "false"

@@ -1,0 +1,24 @@
+{
+  "name": "sentinelkit",
+  "version": "0.1.0",
+  "description": "Suite open source de análise de segurança (dependências, headers, secrets, APK) para apoiar hacking ético e boas práticas de SST/dev.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node test/smoke.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/multipart": "^9.4.0",
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/static": "^10.1.5",
+    "adm-zip": "^0.6.1",
+    "fastify": "^5.12.5"
+  },
+  "author": "Marcos",
+  "engines": {
+    "node": ">=20"
+  }
+}
