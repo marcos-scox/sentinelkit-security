@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
+import cors from '@fastify/cors';
 
 import { scanDependencies } from './modules/deps.js';
 import { scanWeb } from './modules/web/index.js';
@@ -14,6 +15,7 @@ import { report } from './lib/finding.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = Fastify({ logger: { level: process.env.LOG_LEVEL || 'info' }, bodyLimit: 15 * 1024 * 1024 });
 
+await app.register(cors, { origin: ['https://marcos-scox.github.io', 'http://localhost:3000', 'http://127.0.0.1:3000'] });
 await app.register(rateLimit, { max: 30, timeWindow: '1 minute' });
 await app.register(multipart, { limits: { fileSize: 60 * 1024 * 1024, files: 1 } });
 await app.register(fastifyStatic, { root: join(__dirname, '..', 'public') });
