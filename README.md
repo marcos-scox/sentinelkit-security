@@ -4,6 +4,9 @@ Suite open source de **análise de segurança** com 4 módulos e um dashboard ú
 
 > Backend em **Fastify** (Node.js), frontend estático em HTML/JS puro, sem etapa de build.
 
+**Site online:** https://marcos-scox.github.io/sentinelkit-security/
+
+
 ## Uso responsável
 
 Use o SentinelKit **apenas** em sistemas, sites e arquivos que você possui ou tem **autorização por escrito** para testar. Acesso ou teste não autorizado de sistemas de terceiros pode configurar crime no Brasil (Lei 12.737/2012 e Marco Civil da Internet).
